@@ -1,0 +1,9 @@
+apply plugin: 'elasticsearch.esplugin'
+
+esplugin {
+    name 'collection-sort'
+    description 'custom sort'
+    classname 'com.cemarose.elasticsearch.sort.CollectionDefaultSortPlugin'
+}
+
+test.enabled = false
