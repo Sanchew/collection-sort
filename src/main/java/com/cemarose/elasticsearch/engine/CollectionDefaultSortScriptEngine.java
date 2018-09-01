@@ -1,5 +1,6 @@
 package com.cemarose.elasticsearch.engine;
 
+import com.cemarose.elasticsearch.factory.CollectionSortFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.lucene.index.LeafReaderContext;
@@ -28,40 +29,42 @@ public class CollectionDefaultSortScriptEngine implements ScriptEngine {
     }
 
     public <FactoryType> FactoryType compile(String name, String code, final ScriptContext<FactoryType> context, Map<String, String> params) {
-        SearchScript.Factory factory = (pm, lookup) -> new SearchScript.LeafFactory() {
-            {
+//        SearchScript.Factory factory = (pm, lookup) -> new SearchScript.LeafFactory() {
+//            {
 //                logger.info("factory => {}, thread => {} ",this, Thread.currentThread().getId());
-            }
-            public SearchScript newInstance(LeafReaderContext ctx) throws IOException {
-//                logger.info("call newInstance => {}, thread => {}", this, Thread.currentThread().getId());
-                return new SearchScript(pm, lookup, ctx) {
-                    @Override
-                    public double runAsDouble() {
-//                        logger.info("runAsDouble => {}, thread => {}", this, Thread.currentThread().getId());
-//                        logger.info(lookup.doc().getLeafDocLookup(ctx).keySet());
-//                        logger.info(lookup.doc().getTypes());
-                        logger.info("client => {}", client);
-                        GetRequestBuilder builder = client.prepareGet("collections", "collection", pm.get("id").toString());
-                        logger.info("builder => {}", builder);
-                        GetResponse response = builder.get();
-                        List<Object> collects = ((List<Object>) response.getSource().get("collects"));
-                        for(Object obj: collects) {
-                            Map<String, Object> collect = (Map<String, Object>) obj;
-                            logger.info("compare _id => {}, productId => {}", getDoc().get("_id").get(0).toString(), collect.get("productId").toString());
-                            if (collect.get("productId").toString().equals(getDoc().get("_id").get(0).toString())) {
-                                return Double.parseDouble(collect.get("position").toString());
-                            }
-                        }
-                        return 1;
-                    }
-                };
-            }
-
-            public boolean needs_score() {
-                return false;
-            }
-        };
-        return context.factoryClazz.cast(factory);
+//                logger.info("factory params => {}, thread => {} ",pm, Thread.currentThread().getId());
+//            }
+//            public SearchScript newInstance(LeafReaderContext ctx) throws IOException {
+////                logger.info("call newInstance => {}, thread => {}", this, Thread.currentThread().getId());
+//                return new SearchScript(pm, lookup, ctx) {
+//                    @Override
+//                    @SuppressWarnings("unchecked")
+//                    public double runAsDouble() {
+////                        logger.info("runAsDouble => {}, thread => {}", this, Thread.currentThread().getId());
+////                        logger.info(lookup.doc().getLeafDocLookup(ctx).keySet());
+////                        logger.info(lookup.doc().getTypes());
+//                        logger.info("params => {}, thread => {}", pm, Thread.currentThread().getId());
+//                        GetRequestBuilder builder = client.prepareGet("collections", "collection", pm.get("id").toString());
+////                        logger.info("builder => {}", builder);
+//                        GetResponse response = builder.get();
+//                        List<Object> collects = ((List<Object>) response.getSource().get("collects"));
+//                        for(Object obj: collects) {
+//                            Map<String, Object> collect = (Map<String, Object>) obj;
+////                            logger.info("compare _id => {}, productId => {}", getDoc().get("_id").get(0).toString(), collect.get("productId").toString());
+//                            if (collect.get("productId").toString().equals(getDoc().get("_id").get(0).toString())) {
+//                                return Double.parseDouble(collect.get("position").toString());
+//                            }
+//                        }
+//                        return 1;
+//                    }
+//                };
+//            }
+//
+//            public boolean needs_score() {
+//                return false;
+//            }
+//        };
+        return context.factoryClazz.cast(new CollectionSortFactory(client));
     }
 
     public void close() throws IOException {
